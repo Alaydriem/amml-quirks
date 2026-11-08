@@ -36,3 +36,4 @@ jobs:
       name: quirks
       package_task: package
       descriptor: quirks/amml/descriptor.hcl
+

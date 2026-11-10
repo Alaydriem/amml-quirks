@@ -1,10 +1,11 @@
 <div align="center">
 
-<img src="./assets/icon.png" alt="Quirks" width="256">
+<img src="./assets/readme.png" alt="Quirks" width="256">
 
 # Alaydriem's Quirks
 
 [![Release](https://img.shields.io/github/v/release/alaydriem/amml-quirks?include_prereleases)](https://github.com/alaydriem/amml-quirks/releases)
+[![Build](https://img.shields.io/github/actions/workflow/status/alaydriem/amml-quirks/build.yml?branch=master&label=build)](https://github.com/alaydriem/amml-quirks/actions/workflows/build.yml)
 [![License](https://img.shields.io/github/license/alaydriem/amml-quirks)](./LICENSE)
 ![Minecraft Bedrock](https://img.shields.io/badge/Minecraft_Bedrock-1.26.62-62B47A)
 [![AMML](https://img.shields.io/badge/AMML-mod-4A90D9)](https://github.com/alaydriem/amml)
@@ -52,7 +53,7 @@ mise run package
 mise run test
 ```
 
-`mise run package` writes `dist/@alaydriem/quirks/` (`alaydriem_quirks.dll`, `amml.hcl` and `icon.png`). `mise run install [--instance <name>]` runs `package`, then copies it into `%LOCALAPPDATA%\amml\instances\<name>\mods\amml\@alaydriem\quirks\` (default instance `1.26.62.01`). Close the game first.
+`mise run package` writes `dist/@alaydriem/quirks/` (`alaydriem_quirks.dll`, `amml.hcl` and `icon.png`). `mise run install --instance <name>` runs `package`, then copies it into `%LOCALAPPDATA%\amml\instances\<name>\mods\amml\@alaydriem\quirks\`. Close the game first.
 
 The game functions Quirks hooks are found by AMML recipes in the `amml` repository (`recipes/`).
 

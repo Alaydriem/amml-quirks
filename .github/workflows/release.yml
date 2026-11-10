@@ -35,5 +35,5 @@ jobs:
       namespace: alaydriem
       name: quirks
       package_task: package
-      descriptor: quirks/amml/descriptor.hcl
+      descriptor: src/amml/descriptor.hcl
 

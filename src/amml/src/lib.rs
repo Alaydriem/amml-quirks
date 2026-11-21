@@ -1,15 +1,13 @@
-//! @alaydriem/quirks as an AMML mod: hooks the client update and the router, reads the manager events and
-//! the game state, and drives quirks-core with them. No input is ever sent.
+//! @alaydriem/quirks as an AMML mod: listens to the loader's client tick and idle-screen events, reads the manager
+//! events and drives quirks-core with them. No input is ever sent.
 
 #![deny(unsafe_code)]
 
-pub mod detours;
-pub mod input;
+#[forbid(unsafe_code)]
 pub mod quirks_mod;
+#[forbid(unsafe_code)]
 pub mod services;
-pub mod traits;
-pub mod types;
 
 pub use quirks_mod::QuirksMod;
 
-amml_sdk::amml_mod!(QuirksMod);
+amml_api::amml_mod!(QuirksMod);

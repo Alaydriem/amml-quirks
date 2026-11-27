@@ -1,7 +1,7 @@
 namespace    = "alaydriem"
 name         = "quirks"
 display_name = "Quirks"
-version      = "26.63.4"
+version      = "26.63.8"
 author       = "Alaydriem"
 config_path  = "config.hcl"
 

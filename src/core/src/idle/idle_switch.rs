@@ -1,31 +1,42 @@
 use std::time::Instant;
 
-use crate::idle::{IdleGuard, IdleKeepAlive};
+use crate::idle::{FireResult, IdleGuard, IdleKeepAlive};
 
-// The idle fix as one switch: the route guard and the keep-alive go on and off together.
+// The idle fix as one switch: the idle-screen guard and the keep-alive go on and off together.
 pub struct IdleSwitch {
     guard: IdleGuard,
     keep_alive: IdleKeepAlive,
 }
 
 impl IdleSwitch {
-    // `fire` runs the game's any-input handler; false when the game is not ready
-    pub fn new(fire: Box<dyn Fn() -> bool + Send + Sync>) -> Self {
-        Self { guard: IdleGuard::new(), keep_alive: IdleKeepAlive::new(fire) }
+    pub fn new() -> Self {
+        Self { guard: IdleGuard::new(), keep_alive: IdleKeepAlive::new() }
     }
 
-    // does nothing when the switch already has this value
+    // the setting: does nothing when the switch already has this value
     pub fn apply(&self, on: bool) {
-        if on == self.is_on() {
+        if on {
+            self.on();
+        } else {
+            self.off("setting off");
+        }
+    }
+
+    pub fn on(&self) {
+        if self.is_on() {
             return;
         }
-        if on {
-            self.guard.on();
-            self.keep_alive.on();
-        } else {
-            self.guard.off();
-            self.keep_alive.off("setting off");
+        self.guard.on();
+        self.keep_alive.on();
+    }
+
+    // turns both off and logs `why`; does nothing when off
+    pub fn off(&self, why: &str) {
+        if !self.is_on() {
+            return;
         }
+        self.guard.off();
+        self.keep_alive.off(why);
     }
 
     pub fn is_on(&self) -> bool {
@@ -36,11 +47,21 @@ impl IdleSwitch {
         &self.guard
     }
 
-    pub fn tick_at(&self, now: Instant) {
-        self.keep_alive.tick_at(now);
+    pub fn keep_alive(&self) -> &IdleKeepAlive {
+        &self.keep_alive
     }
 
-    pub fn tick(&self) {
-        self.keep_alive.tick();
+    pub fn tick_at(&self, now: Instant, fire: impl FnOnce() -> FireResult) {
+        self.keep_alive.tick_at(now, fire);
+    }
+
+    pub fn tick(&self, fire: impl FnOnce() -> FireResult) {
+        self.keep_alive.tick(fire);
+    }
+}
+
+impl Default for IdleSwitch {
+    fn default() -> Self {
+        Self::new()
     }
 }

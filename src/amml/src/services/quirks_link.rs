@@ -1,60 +1,31 @@
-use std::path::Path;
-
-use amm_client::link::{ApiTable, EventDrain, ManagerLink};
+use amm_client::link::{LinkState, ManagerLink};
 use amm_core::errors::LinkError;
 use amm_core::structs::event::ModEvent;
+use amml_api::Ctx;
 use quirks_core::config::QuirksConfig;
 
 use crate::services::{QuirksDescriptor, RawSettings, SettingsReader};
 
-// the registration with the mod manager and the settings read from it; `events` holds at most
-// MAX_EVENTS_PER_TICK and is cleared at the start of every drain
+// the registration with the mod manager and the settings read from it. `events` is the drain buffer, cleared at the
+// start of every drain; the link itself keeps a bounded number of unread events
 pub struct QuirksLink {
     link: ManagerLink,
-    config: QuirksConfig,
     events: Vec<ModEvent>,
 }
 
 impl QuirksLink {
-    pub const MAX_DRAINS_PER_TICK: usize = 4;
-    pub const MAX_EVENTS_PER_TICK: usize = Self::MAX_DRAINS_PER_TICK * EventDrain::CAPACITY;
-
-    pub fn new(table: ApiTable, config_dir: &Path) -> Result<Self, LinkError> {
-        let link = ManagerLink::without_frame(table, QuirksDescriptor::TEXT, config_dir)?;
-        Self::from_link(link)
+    // the link waits for the manager's tables; `state` says when it is connected
+    pub fn start(ctx: &Ctx) -> Result<Self, LinkError> {
+        let link = ManagerLink::start_without_frame(ctx, QuirksDescriptor::TEXT)?;
+        Ok(Self { link, events: Vec::new() })
     }
 
-    pub fn from_link(link: ManagerLink) -> Result<Self, LinkError> {
-        let mut this =
-            Self { config: QuirksConfig::default(), link, events: Vec::with_capacity(Self::MAX_EVENTS_PER_TICK) };
-        this.config = this.read_settings();
-        Ok(this)
+    pub fn state(&self) -> LinkState {
+        self.link.state()
     }
 
-    pub fn config(&self) -> &QuirksConfig {
-        &self.config
-    }
-
-    // reads the settings again
-    pub fn reload(&mut self) -> &QuirksConfig {
-        self.config = self.read_settings();
-        &self.config
-    }
-
-    // reads the queued manager events, at most MAX_EVENTS_PER_TICK; the rest wait for the next tick
-    pub fn drain(&mut self) -> Vec<ModEvent> {
-        self.events.clear();
-        for _ in 0..Self::MAX_DRAINS_PER_TICK {
-            let before = self.events.len();
-            self.events.extend(self.link.events());
-            if self.events.len() - before < EventDrain::CAPACITY {
-                break;
-            }
-        }
-        self.events.clone()
-    }
-
-    fn read_settings(&self) -> QuirksConfig {
+    // the settings of the manager's config.hcl; a text that cannot be read gives the defaults, with one warning
+    pub fn settings(&self) -> QuirksConfig {
         match self.link.config::<RawSettings>() {
             Ok(raw) => SettingsReader::convert(&raw),
             Err(error) => {
@@ -62,5 +33,12 @@ impl QuirksLink {
                 QuirksConfig::default()
             }
         }
+    }
+
+    // reads every queued manager event
+    pub fn drain(&mut self) -> &[ModEvent] {
+        self.events.clear();
+        self.events.extend(self.link.events());
+        &self.events
     }
 }

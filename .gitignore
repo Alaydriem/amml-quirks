@@ -1,5 +1,6 @@
 /target
 /dist
+/dist-test
 /mise.local.toml
 /.superpowers/
 /docs
